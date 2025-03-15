@@ -1,6 +1,82 @@
 use rand::Rng; 
 
 #[derive(Debug, Clone)]
+enum BlackAllele {
+    DominantB,
+    RecessiveB,
+    RecessiveBDash,
+}
+
+impl BlackAllele {
+    fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        
+        match rng.gen_range(0..3) {
+            0 => BlackAllele::DominantB,
+            1 => BlackAllele::RecessiveB,
+            _ => BlackAllele::RecessiveBDash,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+enum WhiteAllele {
+    DominantW,
+    RecessiveW,
+}
+
+impl WhiteAllele {
+    fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        
+        match rng.gen_range(0..2) {
+            0 => WhiteAllele::DominantW,
+            _ => WhiteAllele::RecessiveW,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+enum OrangeAllele {
+    DominantO,
+    RecessiveO,
+}
+
+impl OrangeAllele {
+    fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        
+        match rng.gen_range(0..2) {
+            0 => OrangeAllele::DominantO,
+            _ => OrangeAllele::RecessiveO,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct CoatGenes {
+    black_first_allele: BlackAllele,
+    black_second_allele: BlackAllele, 
+    white_first_allele: WhiteAllele,
+    white_second_allele: WhiteAllele,
+    orange_first_x_chromosome: OrangeAllele,
+    orange_second_x_chromosome: OrangeAllele,
+}
+
+impl CoatGenes {
+    fn random(no_second_x: Option<OrangeAllele>) -> Self {
+        CoatGenes{
+            black_first_allele: BlackAllele::random(),
+            black_second_allele: BlackAllele::random(), 
+            white_first_allele: WhiteAllele::random(),
+            white_second_allele: WhiteAllele::random(),
+            orange_first_x_chromosome: OrangeAllele::random(),
+            orange_second_x_chromosome: no_second_x.unwrap_or_else(OrangeAllele::random),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 enum CoatColour {
     Brown,
     Black,
@@ -69,7 +145,7 @@ impl Cat {
             name,
             age,
             gender: gender.unwrap_or_else(Gender::random),
-            coat: coat.unwrap_or_else(CoatColour::random)
+            coat: coat.unwrap_or_else(CoatColour::random),
         }
     }
 
