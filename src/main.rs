@@ -86,6 +86,42 @@ impl Cat {
             self.coat.to_string(),
         )
     }
+    
+    // Method to breed two cats and produce an offspring
+    fn breed(parent1: &Cat, parent2: &Cat, kitten_name: String) -> Result<Cat, &'static str> {
+        match (&parent1.gender, &parent2.gender) {
+            (Gender::Male, Gender::Female) | (Gender::Female, Gender::Male) => {
+            },
+            _ => {
+                return Err("Breeding requires one male and one female cat");
+            }
+        }
+        
+        let mut rng = rand::thread_rng();
+        
+        // Randomly determine breed from parents
+        let breed = if rng.gen_bool(0.5) {
+            parent1.breed.clone()
+        } else {
+            parent2.breed.clone()
+        };
+        
+        // Randomly determine coat color from parents
+        let coat = if rng.gen_bool(0.5) {
+            parent1.coat.clone()
+        } else {
+            parent2.coat.clone()
+        };
+        
+        // Create kitten with random gender, age 0, and inherited characteristics
+        Ok(Cat {
+            name: kitten_name,
+            age: 0,
+            breed,
+            gender: Gender::random(),
+            coat,
+        })
+    }
 }
 
 fn generate_random_cats(num_cats: usize) -> Vec<Cat> {
@@ -101,12 +137,7 @@ fn generate_random_cats(num_cats: usize) -> Vec<Cat> {
         "Sphynx",
         "British Shorthair"
     ];
-    // let cat1 = Cat::random_cat("Whiskers".to_string(), 3, "Maine Coon".to_string(), None, None);
-    // println!("{}", cat1.get_info());
-    // // With specified gender
-    // let cat2 = Cat::random_cat("Mittens".to_string(), 5, "Siamese".to_string(), Some(Gender::Female), None);
-    // println!("{}", cat2.get_info());
-    // // Generate a vector of random cats
+    
     (0..num_cats).map(|i| {
         Cat::random_cat(
             format!("Cat {}", i + 1),  // Generate sequential names
@@ -124,5 +155,37 @@ fn main() {
 
     for cat in cats {
         println!("{}", cat.get_info());
+    }
+    
+    // Create two cats for breeding
+    let tom = Cat::random_cat(
+        "Tom".to_string(), 
+        3, 
+        "Maine Coon".to_string(), 
+        Some(Gender::Male), 
+        Some(CoatColour::Orange)
+    );
+    
+    let queen = Cat::random_cat(
+        "Queen".to_string(), 
+        2, 
+        "Siamese".to_string(), 
+        Some(Gender::Female), 
+        Some(CoatColour::White)
+    );
+    
+    println!("\nParents:");
+    println!("Father: {}", tom.get_info());
+    println!("Mother: {}", queen.get_info());
+    
+    // Breed the cats
+    match Cat::breed(&tom, &queen, "Kitten".to_string()) {
+        Ok(kitten) => {
+            println!("\nKitten born!");
+            println!("Kitten: {}", kitten.get_info());
+        },
+        Err(e) => {
+            println!("Breeding failed: {}", e);
+        }
     }
 }
