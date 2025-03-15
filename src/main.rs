@@ -58,18 +58,16 @@ impl Gender {
 struct Cat {
     name: String,
     age: u8,
-    breed: String,
     gender: Gender,
     coat: CoatColour,
 }
 
 impl Cat {
     // Method to generate a random cat with randomly assigned gender
-    fn random_cat(name: String, age: u8, breed: String, gender: Option<Gender>, coat: Option<CoatColour>) -> Self {
+    fn random_cat(name: String, age: u8, gender: Option<Gender>, coat: Option<CoatColour>) -> Self {
         Cat {
             name,
             age,
-            breed,
             gender: gender.unwrap_or_else(Gender::random),
             coat: coat.unwrap_or_else(CoatColour::random)
         }
@@ -78,10 +76,9 @@ impl Cat {
     // Method to get cat information
     fn get_info(&self) -> String {
         format!(
-            "Name: {}, Age: {}, Breed: {}, Gender: {}, Coat colour: {}",
+            "Name: {}, Age: {}, Gender: {}, Coat colour: {}",
             self.name, 
             self.age, 
-            self.breed, 
             self.gender.to_string(),
             self.coat.to_string(),
         )
@@ -99,13 +96,6 @@ impl Cat {
         
         let mut rng = rand::thread_rng();
         
-        // Randomly determine breed from parents
-        let breed = if rng.gen_bool(0.5) {
-            parent1.breed.clone()
-        } else {
-            parent2.breed.clone()
-        };
-        
         // Randomly determine coat color from parents
         let coat = if rng.gen_bool(0.5) {
             parent1.coat.clone()
@@ -117,7 +107,6 @@ impl Cat {
         Ok(Cat {
             name: kitten_name,
             age: 0,
-            breed,
             gender: Gender::random(),
             coat,
         })
@@ -127,22 +116,10 @@ impl Cat {
 fn generate_random_cats(num_cats: usize) -> Vec<Cat> {
     let mut rng = rand::thread_rng();
     
-    // Array of possible cat breeds
-    let breeds = [
-        "Persian", 
-        "Siamese", 
-        "Maine Coon", 
-        "Bengal", 
-        "Russian Blue",
-        "Sphynx",
-        "British Shorthair"
-    ];
-    
     (0..num_cats).map(|i| {
         Cat::random_cat(
             format!("Cat {}", i + 1),  // Generate sequential names
-            rng.gen_range(0..15),      // Random age between 0-14
-            breeds[rng.gen_range(0..breeds.len())].to_string(),  // Random breed
+            rng.gen_range(0..15),      
             None, 
             None,
         )
@@ -161,7 +138,6 @@ fn main() {
     let tom = Cat::random_cat(
         "Tom".to_string(), 
         3, 
-        "Maine Coon".to_string(), 
         Some(Gender::Male), 
         Some(CoatColour::Orange)
     );
@@ -169,7 +145,6 @@ fn main() {
     let queen = Cat::random_cat(
         "Queen".to_string(), 
         2, 
-        "Siamese".to_string(), 
         Some(Gender::Female), 
         Some(CoatColour::White)
     );
