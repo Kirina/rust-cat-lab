@@ -1,4 +1,11 @@
+// mod coat_genes;
+// mod gender;
+// use gender::Gender;
+// use coat_genes::CoatGenes;
 use rand::Rng; 
+
+
+// Import the Gender enum from the gender module
 
 #[derive(Debug, Clone)]
 enum BlackAllele {
@@ -15,6 +22,13 @@ impl BlackAllele {
             0 => BlackAllele::DominantB,
             1 => BlackAllele::RecessiveB,
             _ => BlackAllele::RecessiveBDash,
+        }
+    }
+    fn to_string(&self) -> String {
+        match self {
+            BlackAllele::DominantB => "B (Dominant Black)".to_string(),
+            BlackAllele::RecessiveB => "b (Recessive Black)".to_string(),
+            BlackAllele::RecessiveBDash => "b' (Chocolate/Cinnamon)".to_string(),
         }
     }
 }
@@ -34,6 +48,12 @@ impl WhiteAllele {
             _ => WhiteAllele::RecessiveW,
         }
     }
+    fn to_string(&self) -> String {
+        match self {
+            WhiteAllele::DominantW => "W (Dominant White)".to_string(),
+            WhiteAllele::RecessiveW => "w (Recessive White)".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -51,6 +71,12 @@ impl OrangeAllele {
             _ => OrangeAllele::RecessiveO,
         }
     }
+    fn to_string(&self) -> String {
+        match self {
+            OrangeAllele::DominantO => "O (Orange)".to_string(),
+            OrangeAllele::RecessiveO => "o (Non-Orange)".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -60,53 +86,48 @@ struct CoatGenes {
     white_first_allele: WhiteAllele,
     white_second_allele: WhiteAllele,
     orange_first_x_chromosome: OrangeAllele,
-    orange_second_x_chromosome: OrangeAllele,
+    orange_second_x_chromosome: Option<OrangeAllele>,
 }
 
 impl CoatGenes {
-    fn random(no_second_x: Option<OrangeAllele>) -> Self {
+    // Male cats have no second x chromosome, so second is optional
+    fn random(gender: &Gender) -> Self {
+        let orange_second_x_chromosome = if *gender == Gender::Male {
+            None
+        } else {
+            Some(OrangeAllele::random())
+        };
         CoatGenes{
             black_first_allele: BlackAllele::random(),
             black_second_allele: BlackAllele::random(), 
             white_first_allele: WhiteAllele::random(),
             white_second_allele: WhiteAllele::random(),
             orange_first_x_chromosome: OrangeAllele::random(),
-            orange_second_x_chromosome: no_second_x.unwrap_or_else(OrangeAllele::random),
+            orange_second_x_chromosome: orange_second_x_chromosome,
         }
     }
-}
-
-#[derive(Debug, Clone)]
-enum CoatColour {
-    Brown,
-    Black,
-    Orange,
-    White,
-}
-
-impl CoatColour {
-    fn random() -> Self {
-        let mut rng = rand::thread_rng();
-        
-        match rng.gen_range(0..4) {
-            0 => CoatColour::Brown,
-            1 => CoatColour::Black,
-            2 => CoatColour::Orange,
-            _ => CoatColour::White,
-        }
-    }
-
     fn to_string(&self) -> String {
-        match self {
-            CoatColour::Brown => "Brown".to_string(),
-            CoatColour::Black => "Black".to_string(),
-            CoatColour::Orange => "Orange".to_string(),
-            CoatColour::White => "White".to_string(),
-        }
+        let black_info = format!("Black genes: {} and {}", 
+            self.black_first_allele.to_string(), 
+            self.black_second_allele.to_string());
+            
+        let white_info = format!("White genes: {} and {}", 
+            self.white_first_allele.to_string(), 
+            self.white_second_allele.to_string());
+            
+        let orange_info = match &self.orange_second_x_chromosome {
+            Some(second_allele) => format!("Orange genes: {} and {}", 
+                self.orange_first_x_chromosome.to_string(), 
+                second_allele.to_string()),
+            None => format!("Orange genes: {} (male, single X chromosome)", 
+                self.orange_first_x_chromosome.to_string()),
+        };
+        
+        format!("{}\n{}\n{}", black_info, white_info, orange_info)
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Gender {
     Male,
     Female,
@@ -134,29 +155,28 @@ impl Gender {
 struct Cat {
     name: String,
     age: u8,
+    coat_genes: CoatGenes,
     gender: Gender,
-    coat: CoatColour,
 }
 
 impl Cat {
-    // Method to generate a random cat with randomly assigned gender
-    fn random_cat(name: String, age: u8, gender: Option<Gender>, coat: Option<CoatColour>) -> Self {
+    fn random_cat(name: String, age: u8, gender_option: Option<Gender>) -> Self {
+        let gender = gender_option.unwrap_or_else(Gender::random);
         Cat {
             name,
             age,
-            gender: gender.unwrap_or_else(Gender::random),
-            coat: coat.unwrap_or_else(CoatColour::random),
+            coat_genes: CoatGenes::random(&gender),
+            gender,                      
         }
     }
 
-    // Method to get cat information
     fn get_info(&self) -> String {
         format!(
             "Name: {}, Age: {}, Gender: {}, Coat colour: {}",
             self.name, 
             self.age, 
             self.gender.to_string(),
-            self.coat.to_string(),
+            self.coat_genes.to_string(),
         )
     }
     
@@ -173,10 +193,10 @@ impl Cat {
         let mut rng = rand::thread_rng();
         
         // Randomly determine coat color from parents
-        let coat = if rng.gen_bool(0.5) {
-            parent1.coat.clone()
+        let coat_genes = if rng.gen_bool(0.5) {
+            parent1.coat_genes.clone()
         } else {
-            parent2.coat.clone()
+            parent2.coat_genes.clone()
         };
         
         // Create kitten with random gender, age 0, and inherited characteristics
@@ -184,7 +204,7 @@ impl Cat {
             name: kitten_name,
             age: 0,
             gender: Gender::random(),
-            coat,
+            coat_genes,
         })
     }
 }
@@ -197,13 +217,11 @@ fn generate_random_cats(num_cats: usize) -> Vec<Cat> {
             format!("Cat {}", i + 1),  // Generate sequential names
             rng.gen_range(0..15),      
             None, 
-            None,
         )
     }).collect()
 }
 
 fn main() {
-    // Generate 5 random cats
     let cats = generate_random_cats(5);
 
     for cat in cats {
@@ -215,14 +233,12 @@ fn main() {
         "Tom".to_string(), 
         3, 
         Some(Gender::Male), 
-        Some(CoatColour::Orange)
     );
     
     let queen = Cat::random_cat(
         "Queen".to_string(), 
         2, 
         Some(Gender::Female), 
-        Some(CoatColour::White)
     );
     
     println!("\nParents:");
