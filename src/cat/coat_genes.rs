@@ -1,4 +1,4 @@
-use crate::gender::Gender;
+use crate::cat::Gender;
 use rand::Rng; 
 
 #[derive(Debug, Clone)]
